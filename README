@@ -1,0 +1,48 @@
+Consider a marble machine that produces sequences of marbles. This machine takes as input, one parameter, an integer from 1 to 8 which determines the set of colours available for making a marble sequence. 
+
+Your task is to write a Java program that outputs all of the possible marble sequences that this machine could possibly generate. Please return to us:
+- the source code
+- a chosen input and the output your program produced.
+
+Input:
+
+Your program must read an input selection from the command line from 1 to 8.. The colours available to the machine for each input selection are as follows:
+
+1 = [blue]
+2 = [blue, green]
+3 = [blue, green, red]
+4 = [blue, green, red, yellow]
+5 = [blue, green, red, yellow, orange]
+6 = [blue, green, red, yellow, orange, purple]
+7 = [blue, green, red, yellow, orange, purple, brown]
+8 = [blue, green, red, yellow, orange, purple, brown, white]
+
+Constraints:
+
+1. The machine is allowed to use any colour only once per sequence, or not at all.
+2. A marble can be made of either one or two colours.
+3. The machine must generate at least one marble per sequence.
+
+Output:
+ 
+Your program should generate the list of all possible marble sequences that could be generated for the given input selection from 1 to 8.
+
+Each sequence must be output one per line. A marble made of a single colour is represented by the name of the colour and a marble made of two colours is represented by the names of each colour seperated by '+'. Each marble must be seperated by a single space.
+
+Sample Input:
+
+2
+
+Sample Output:
+
+blue
+
+green
+
+blue+green
+
+blue green
+
+green blue
+
+
