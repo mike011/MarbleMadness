@@ -1,4 +1,4 @@
-package ca.charland.agfa.marble;
+package ca.charland.marble;
 
 import java.util.Set;
 import java.util.TreeSet;

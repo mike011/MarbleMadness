@@ -1,4 +1,4 @@
-package ca.charland.agfa.marble;
+package ca.charland.marble;
 
 import java.util.ArrayList;
 import java.util.List;
