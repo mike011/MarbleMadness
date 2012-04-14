@@ -210,18 +210,10 @@ public class MarbleMachine {
 	 * @return The set of permutations.
 	 */
 	Set<String> permutationGenerator(String possiblePermutation, int[] ints, Set<String> result) {
-		System.out.println("prefix: " + possiblePermutation);
-		System.out.print("s: [ ");
-		for (int a : ints) {
-			System.out.print(a);
-			System.out.print(' ');
-		}
-		System.out.println("]\n");
 		if (ints.length == 0) {
 			result.add(possiblePermutation);
 		} else {
 			for (int i = 0; i < ints.length; i++) {
-				System.out.println("FOR[" + i + "] >>");
 				StringBuffer newPartialPermutation = new StringBuffer();
 				newPartialPermutation.append(possiblePermutation).append(ints[i]);
 
@@ -233,9 +225,7 @@ public class MarbleMachine {
 					newInt[a - 1] = ints[a];
 				}
 
-				System.out.println("r call");
 				permutationGenerator(newPartialPermutation.toString(), newInt, result);
-				System.out.println("FOR <<");
 			}
 		}
 		return result;
