@@ -1,0 +1,50 @@
+First shot
+ALGORITHM
+-For looping around to try to create all the combos
+
+PROBLEM
+- Didn't solve problem.
+
+Recursion #1
+
+ALGORITHM
+- First attempt that copy and pasted examples from online.
+
+PROBLEM
+- Didn't solve problem.
+
+
+Recursion #2
+
+ALGORITHM
+- Create all the colours combos(ie. 2 marbles = "blue, green, blue+green"
+
+PROBLEM
+- Way way way to many combinations.
+- 4 marbles was looking at millions of combinations.
+- ULTRA SLOW.
+
+
+Recursion #3 -- Current
+
+ALGORITHM
+- Create a string of the marbles (ie. 2 marbles = "01")
+- Generate all the permutations for the string.
+- Reduce the string length and generate all the permutations.
+- Remove any duplicates.
+- Convert the strings to colours
+- Now go through all the combinations and remove any reverse colour marble combinations
+- Print
+
+PROBLEM
+- 7 marbles is minutes
+- 8 marbles is hours :(
+
+
+Recursion #4
+
+- Create Marble objects instead of a string combo?
+- Is there any way to not generate duplicates?
+- Or not generate reverse colour marble combinations?
+- Where is the current version the slowest?
+
