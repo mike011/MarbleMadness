@@ -9,20 +9,10 @@ import org.junit.Test;
 
 import ca.charland.marble.MarbleMachine;
 
-/**
- * Test the Marble Machine class.
- * 
- * @author mcharland
- * 
- */
 public class MarbleMachineTest {
 
-	/** The Constant WRONG_COLOUR_COMBINATION. */
 	private static final String WRONG_COLOUR_COMBINATION = "wrong colour combination";
 
-	/**
-	 * Tests passing in null as the argument to parse.
-	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void testParseNull() {
 		// Setup
@@ -32,9 +22,6 @@ public class MarbleMachineTest {
 		mm.parse(null);
 	}
 
-	/**
-	 * Tests passing in an empty List as the argument to parse.
-	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void testParseEmptyList() {
 		// Setup
@@ -45,9 +32,6 @@ public class MarbleMachineTest {
 		mm.parse(args);
 	}
 
-	/**
-	 * Tests passing in an empty string as the argument to parse.
-	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void testParseEmptyString() {
 		// Setup
@@ -58,9 +42,6 @@ public class MarbleMachineTest {
 		mm.parse(args);
 	}
 
-	/**
-	 * Tests passing in multiple characters as the argument to parse.
-	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void testParseMultipleCharacters() {
 		// Setup
@@ -71,9 +52,6 @@ public class MarbleMachineTest {
 		mm.parse(args);
 	}
 
-	/**
-	 * Tests passing in a letter as the argument to parse.
-	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void testParseLetter() {
 		// Setup
@@ -84,9 +62,6 @@ public class MarbleMachineTest {
 		mm.parse(args);
 	}
 
-	/**
-	 * Tests passing in a number that is too low.
-	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void testParseOutOfBoundsLow() {
 		// Setup
@@ -97,9 +72,6 @@ public class MarbleMachineTest {
 		mm.parse(args);
 	}
 
-	/**
-	 * Tests passing in a number that is too high.
-	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void testParseOutOfBoundsHigh() {
 		// Setup
@@ -110,9 +82,6 @@ public class MarbleMachineTest {
 		mm.parse(args);
 	}
 
-	/**
-	 * Tests passing in a valid number.
-	 */
 	@Test
 	public void testParse() {
 		// Setup
@@ -126,9 +95,6 @@ public class MarbleMachineTest {
 		assertEquals("two marbles", 2, mm.getMarbles());
 	}
 
-	/**
-	 * Tests generating the possible sequences for one marble.
-	 */
 	@Test
 	public void testGenerateSequencesOne() {
 		// Setup
@@ -145,9 +111,6 @@ public class MarbleMachineTest {
 		assertEquals(WRONG_COLOUR_COMBINATION, "blue", sequences.toArray()[0]);
 	}
 
-	/**
-	 * Tests generating the possible sequences for two marbles.
-	 */
 	@Test
 	public void testGenerateSequencesTwo() {
 		// Setup
@@ -170,9 +133,6 @@ public class MarbleMachineTest {
 		assertEquals("amount of sequences", 5, sequences.size());
 	}
 
-	/**
-	 * Tests generating the possible sequences for three marbles.
-	 */
 	@Test
 	public void testGenerateSequencesThree() {
 		// Setup
@@ -218,9 +178,6 @@ public class MarbleMachineTest {
 		assertEquals("amount of sequences", 24, sequences.size());
 	}
 
-	/**
-	 * Tests generating the possible sequences for four marbles.
-	 */
 	@Test
 	public void testGenerateSequencesFour() {
 		// Setup
@@ -236,9 +193,6 @@ public class MarbleMachineTest {
 		assertEquals("amount of sequences", 130, sequences.size());
 	}
 
-	/**
-	 * Tests generating the possible sequences for four marbles.
-	 */
 	@Test
 	public void testGenerateSequencesFive() {
 		// Setup
@@ -254,9 +208,6 @@ public class MarbleMachineTest {
 		assertEquals("amount of sequences", 815, sequences.size());
 	}
 
-	/**
-	 * Tests generating the possible sequences for four marbles.
-	 */
 	@Test
 	public void testGenerateSequencesSix() {
 		// Setup
@@ -272,9 +223,6 @@ public class MarbleMachineTest {
 		assertEquals("amount of sequences", 5871, sequences.size());
 	}
 	
-	/**
-	 * Test the permutation method.
-	 */
 	@Test
 	public void testPermutationOne() {
 
@@ -290,9 +238,6 @@ public class MarbleMachineTest {
 		assertEquals("0", permutation.toArray()[0]);
 	}
 
-	/**
-	 * Test the permutation method.
-	 */
 	@Test
 	public void testPermutationTwo() {
 
@@ -310,9 +255,6 @@ public class MarbleMachineTest {
 		assertEquals("10", permutation.toArray()[x++]);
 	}
 	
-	/**
-	 * Test the permutation method.
-	 */
 	@Test
 	public void testPermutationThree() {
 
