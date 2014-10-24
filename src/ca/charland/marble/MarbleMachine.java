@@ -27,27 +27,12 @@ public class MarbleMachine {
 
 	}
 
-	/**
-	 * The available colours of marbles.
-	 */
 	private final static String COLOURS[] = { "blue", "green", "red", "yellow", "orange", "purple", "brown", "white" };
 
-	/**
-	 * The amount of marbles to generate the sequences for.
-	 */
 	private int amountOfMarbles;
 
-	/**
-	 * A collection of all the sequences that have been generated.
-	 */
 	private Set<String> sequences;
 
-	/**
-	 * Handles parsing the user input.
-	 * 
-	 * @param args
-	 *            The arguments passed in.
-	 */
 	public void parse(String args[]) {
 
 		// Make sure you have one argument passed in that is a number.
@@ -65,16 +50,10 @@ public class MarbleMachine {
 		amountOfMarbles = marbles;
 	}
 
-	/**
-	 * @return The amount of marbles.
-	 */
 	int getMarbles() {
 		return amountOfMarbles;
 	}
 
-	/**
-	 * Generates all the sequences for the marbles.
-	 */
 	public void generateSequences() {
 		int[] s = new int[amountOfMarbles];
 		for (int x = 0; x < amountOfMarbles; x++) {
@@ -91,16 +70,6 @@ public class MarbleMachine {
 		addAllCombos(sequences);
 	}
 
-	/**
-	 * Generate all permutations.
-	 * 
-	 * @param s
-	 *            the array of integers.
-	 * @param allIndexes
-	 *            the all indexes
-	 * @param permutation
-	 *            the permutation
-	 */
 	private Set<String> generatePermutations(int[] s) {
 		Set<String> result = new TreeSet<String>();
 		Set<String> permutation = permutation(s);
@@ -128,13 +97,6 @@ public class MarbleMachine {
 		return result;
 	}
 
-	/**
-	 * Converts from the indexes to to the marble colours.
-	 * 
-	 * @param allIndexes
-	 *            the all indexes
-	 * @return the sets the
-	 */
 	Set<String> convertToColours(Set<String> allIndexes) {
 		Set<String> allColours = new TreeSet<String>();
 		for (String a : allIndexes) {
@@ -148,12 +110,6 @@ public class MarbleMachine {
 		return allColours;
 	}
 
-	/**
-	 * Adds the all combinations.
-	 * 
-	 * @param allColours
-	 *            the all colours
-	 */
 	private void addAllCombos(Set<String> allColours) {
 		List<String> allCombos = new ArrayList<String>();
 		for (String out : allColours) {
@@ -187,28 +143,10 @@ public class MarbleMachine {
 		allColours.addAll(allCombos);
 	}
 
-	/**
-	 * Generate all the permutations for a given string.
-	 * 
-	 * @param s
-	 *            The String to find all the permutations for.
-	 * @return The set of permutations.
-	 */
 	Set<String> permutation(int[] s) {
 		return permutationGenerator("", s, new TreeSet<String>());
 	}
 
-	/**
-	 * Permutation generation. This method recursively calls itself.
-	 * 
-	 * @param possiblePermutation
-	 *            Generated from the recursive calls while there are still ints left to be added.
-	 * @param ints
-	 *            An int array that is splits it two halves, has the middle item removed and mashes them back together.
-	 * @param result
-	 *            A set of the permutations.
-	 * @return The set of permutations.
-	 */
 	Set<String> permutationGenerator(String possiblePermutation, int[] ints, Set<String> result) {
 		if (ints.length == 0) {
 			result.add(possiblePermutation);
@@ -231,16 +169,10 @@ public class MarbleMachine {
 		return result;
 	}
 
-	/**
-	 * @return All the generated sequences.
-	 */
 	Set<String> getSequences() {
 		return sequences;
 	}
 
-	/**
-	 * Prints all the sequences.
-	 */
 	public void print() {
 		for (String s : sequences) {
 			System.out.println(s);
