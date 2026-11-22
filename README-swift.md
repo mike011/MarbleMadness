@@ -4,6 +4,8 @@ Swift solution to the marble machine problem in `README`. It replaces the
 earlier Java/Eclipse version, which missed every sequence with more than one
 two-colour marble and took hours for 8 colours.
 
+`POSTMORTEM.md` explains what went wrong with the original approach and the lessons from it.
+
 Diagrams of the old bug and the new algorithm are in `diagrams/`:
 
 - `diagrams/1-before-old-algorithm.png`: what the old Java approach did and where it went wrong
