@@ -1,0 +1,24 @@
+blue
+green
+red
+blue+green
+blue+red
+green+red
+blue green
+blue red
+blue green+red
+green blue
+green red
+green blue+red
+red blue
+red green
+red blue+green
+blue+green red
+blue+red green
+green+red blue
+blue green red
+blue red green
+green blue red
+green red blue
+red blue green
+red green blue

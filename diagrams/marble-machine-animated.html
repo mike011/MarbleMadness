@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Animated comparison of the old Java marble machine algorithm and the correct marble-by-marble algorithm.">
+<title>Marble Machine Animated</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column; each section is a "machine bench" with a sunken stage, a caption, and a control strip. */
+:root {
+  --bg: #f3f5f7;
+  --surface: #ffffff;
+  --sunk: #e6eaef;
+  --ink: #14181e;
+  --ink2: #4a5361;
+  --line: #d5dbe3;
+  --accent: #0e7490;
+  --accent-ink: #ffffff;
+  --good: #15803d;
+  --bad: #cf3434;
+  --ghost: #98a1ad;
+  --font-d: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-b: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-m: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --dur: 500ms;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1216; --surface: #171b21; --sunk: #0b0e12; --ink: #e7ebf0; --ink2: #a4adba;
+    --line: #2a313b; --accent: #3bb4cb; --accent-ink: #061418; --good: #4ade80; --bad: #f07070; --ghost: #6b7583;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1216; --surface: #171b21; --sunk: #0b0e12; --ink: #e7ebf0; --ink2: #a4adba;
+  --line: #2a313b; --accent: #3bb4cb; --accent-ink: #061418; --good: #4ade80; --bad: #f07070; --ghost: #6b7583;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-b); font-size: 16px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 64px;
+}
+.wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 40px; }
+h1, h2, h3 { font-family: var(--font-d); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 800; letter-spacing: -0.01em; }
+h2 { font-size: clamp(22px, 3vw, 28px); font-weight: 800; }
+h3 { font-size: 15px; font-weight: 600; font-family: var(--font-b); }
+p { margin: 0; max-width: 68ch; }
+.lede { color: var(--ink2); font-size: 18px; margin-top: 10px; }
+b { font-weight: 600; }
+code, .mono { font-family: var(--font-m); font-size: 0.9em; }
+.eyebrow { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink2); font-weight: 600; }
+
+/* "what + means" explainer */
+.explain { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px 24px; display: grid; gap: 14px; }
+.explain h3 { margin-top: 6px; }
+.glyphs { display: inline-flex; gap: 7px; align-items: center; flex: none; }
+.gl {
+  width: 28px; height: 28px; border-radius: 50%; display: inline-block; flex: none;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255,255,255,0.75) 0 7%, rgba(255,255,255,0) 30%),
+    radial-gradient(circle at 65% 78%, rgba(0,0,0,0.25), rgba(0,0,0,0) 60%),
+    var(--fill);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.22);
+}
+.examples { display: grid; gap: 8px; }
+.ex { display: grid; grid-template-columns: 150px minmax(0, 190px) minmax(0, 1fr); gap: 4px 16px; align-items: center; padding: 8px 12px; border-radius: 10px; background: var(--bg); }
+.ex .mono { font-size: 14px; overflow-wrap: anywhere; }
+.bad { color: var(--bad); }
+.rules { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.rule { padding: 12px 14px; border-radius: 10px; background: var(--bg); min-width: 0; }
+.sample { display: flex; flex-wrap: wrap; gap: 8px; }
+.sitem { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); }
+.sitem .gl { width: 20px; height: 20px; }
+.sitem .glyphs { gap: 4px; }
+.sitem .mono { font-size: 13px; }
+.groupings { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.gcard { display: grid; gap: 6px; justify-items: start; padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); min-width: 0; }
+.gcard .glyphs { margin-bottom: 4px; }
+.gverdict { font-size: 14px; font-weight: 600; color: var(--good); }
+.gcard.miss { border: 2px dashed var(--bad); }
+.gcard.miss .gverdict { color: var(--bad); }
+
+/* summary cards */
+.versus { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.vcard { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.vcard ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.vcard .verdict { font-weight: 600; }
+.vcard.old .verdict { color: var(--bad); }
+.vcard.new .verdict { color: var(--good); }
+
+section.bench { display: grid; gap: 14px; }
+.stage {
+  position: relative; background: var(--sunk); border-radius: 18px; overflow: hidden;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.12), inset 0 -1px 0 rgba(255,255,255,0.4);
+}
+#oldStage { height: 168px; }
+#newStage { height: 250px; }
+.rowlabel { position: absolute; left: 14px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink2); font-weight: 600; }
+.dimple { position: absolute; border-radius: 50%; background: rgba(0,0,0,0.07); box-shadow: inset 0 2px 3px rgba(0,0,0,0.16); transition: opacity var(--dur); }
+.slotnum { position: absolute; font-family: var(--font-m); font-size: 11px; color: var(--ink2); transform: translateX(-50%); }
+.trackslot { position: absolute; border: 2px dashed var(--line); border-radius: 50%; transition: border-color var(--dur), transform var(--dur), opacity var(--dur); }
+.stage.emit .trackslot { border-color: var(--good); border-style: solid; }
+.stage.prune .trackslot { border-color: var(--bad); }
+
+.marble {
+  position: absolute; left: 0; top: 0; border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255,255,255,0.75) 0 7%, rgba(255,255,255,0) 30%),
+    radial-gradient(circle at 65% 78%, rgba(0,0,0,0.28), rgba(0,0,0,0) 60%),
+    var(--c);
+  box-shadow: 0 3px 6px rgba(0,0,0,0.25);
+  display: grid; place-items: center; font-family: var(--font-m); font-weight: 600; font-size: 15px;
+  clip-path: inset(0 0 0 0 round 50%);
+  transition: transform var(--dur) cubic-bezier(.3,.7,.2,1), clip-path var(--dur), opacity var(--dur), outline-color var(--dur);
+  outline: 2px dashed transparent; outline-offset: 3px;
+}
+.marble span { transition: transform var(--dur); }
+.marble.hl { clip-path: inset(0 50% 0 0); }
+.marble.hr { clip-path: inset(0 0 0 50%); }
+.marble.hl span { transform: translateX(-38%); }
+.marble.hr span { transform: translateX(38%); }
+.marble.ghost { opacity: 0.38; }
+.marble.dim { opacity: 0.25; }
+
+.bracket {
+  position: absolute; height: 16px; border: 2px solid var(--accent); border-bottom: 0; border-radius: 8px 8px 0 0;
+  transition: transform var(--dur), width var(--dur), opacity var(--dur), border-color var(--dur); left: 0; top: 0;
+}
+.bracket .tag {
+  position: absolute; left: 50%; bottom: 100%; transform: translate(-50%, -4px); white-space: nowrap;
+  font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: var(--accent); color: var(--accent-ink);
+}
+.bracket.skip { border-color: var(--ghost); }
+.bracket.skip .tag { background: var(--ghost); color: var(--bg); }
+.bracket.never { border-color: var(--bad); border-style: dashed; }
+.bracket.never .tag { background: var(--bad); color: #fff; }
+
+.caption {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; min-height: 76px;
+  display: grid; gap: 2px; align-content: start;
+}
+.caption .stepno { font-size: 12px; color: var(--ink2); font-family: var(--font-m); }
+
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.controls input[type=range] { flex: 1 1 200px; min-width: 0; accent-color: var(--accent); }
+button, select {
+  font: inherit; font-size: 14px; font-weight: 600; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink); padding: 7px 14px; cursor: pointer;
+}
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); min-width: 84px; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.jumps { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.jumps .eyebrow { margin-right: 4px; }
+.jumps button { font-size: 13px; padding: 5px 11px; }
+
+.panels { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.panel .head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.count { font-family: var(--font-m); font-size: 13px; color: var(--ink2); font-variant-numeric: tabular-nums; }
+.list { display: flex; flex-wrap: wrap; gap: 6px; max-height: 210px; overflow-y: auto; align-content: flex-start; }
+
+.seq { display: inline-flex; align-items: center; gap: 3px; padding: 3px 7px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); font-family: var(--font-m); font-size: 12px; transition: opacity 200ms, border-color 200ms, background 200ms; }
+.seq .txt { margin-left: 4px; }
+.seq.new { border-color: var(--good); background: color-mix(in srgb, var(--good) 12%, var(--bg)); }
+.seq.missing { border: 1.5px dashed var(--bad); color: var(--bad); background: transparent; }
+.seq.missing .mini { opacity: 0.45; }
+.pulse { animation: pulse 1.2s ease-in-out 2; }
+@keyframes pulse { 50% { background: color-mix(in srgb, var(--bad) 18%, transparent); } }
+.mini { width: 13px; height: 13px; border-radius: 50%; display: inline-block; flex: none; box-shadow: inset 0 -2px 2px rgba(0,0,0,0.2); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.mask { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.bit { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-family: var(--font-m); font-weight: 600; font-size: 13px; border: 1px solid var(--line); background: var(--bg); color: var(--ink2); transition: background var(--dur), color var(--dur); }
+.bit.on { background: var(--c); color: var(--t); border-color: transparent; }
+.maskbin { font-family: var(--font-m); font-size: 13px; color: var(--ink2); margin-left: 6px; }
+
+/* section 3 grid */
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--ink2); align-items: center; }
+.legend span.key { display: inline-flex; align-items: center; gap: 6px; }
+.groups { display: grid; gap: 14px; }
+.group { display: grid; gap: 6px; }
+.group .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip { display: inline-flex; gap: 2px; padding: 4px 6px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); transition: opacity 150ms, filter 150ms, border-color 150ms; }
+.chip.off { opacity: 0.22; filter: grayscale(1); }
+.chip.missing { opacity: 1; filter: none; border: 2px dashed var(--bad); background: color-mix(in srgb, var(--bad) 10%, var(--surface)); }
+.chip.missing .mini { opacity: 0.55; }
+.scoreline { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: baseline; }
+.score { font-family: var(--font-d); font-weight: 800; font-size: 34px; font-variant-numeric: tabular-nums; }
+.score small { font-size: 16px; color: var(--ink2); font-weight: 600; font-family: var(--font-b); }
+
+@media (max-width: 720px) {
+  .versus, .panels, .rules, .groupings { grid-template-columns: 1fr; }
+  .ex { grid-template-columns: 1fr; }
+  .explain { padding: 18px 16px; }
+  #newStage { height: 236px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur: 0ms; }
+  .pulse { animation: none; }
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <div class="eyebrow">Marble Madness</div>
+    <h1>Watch both solutions build marble sequences</h1>
+    <p class="lede">Everything here uses 4 colours: blue, green, red and yellow. There are 136 valid sequences. Your Java version made 130 of them. Step through the animations to see which 6 it missed and why.</p>
+  </header>
+
+  <section class="explain" aria-labelledby="plusTitle">
+    <h2 id="plusTitle">First, why are colours added together?</h2>
+    <p>The machine makes marbles, and the README says a marble can be made of <b>one colour or two colours mixed together</b>. So the colours aren't really being added. Some marbles are simply made of two colours. In the output, a <span class="mono">+</span> joins the colours inside one marble, and a space separates one marble from the next. Each colour can be used at most once per sequence, so a two-colour marble uses up both of its colours.</p>
+
+    <div class="examples">
+      <div class="ex"><span class="glyphs" data-seq="blue"></span><span class="mono">blue</span><span>1 marble, made of blue.</span></div>
+      <div class="ex"><span class="glyphs" data-seq="blue+green"></span><span class="mono">blue+green</span><span><b>1 marble</b>, made of blue and green together.</span></div>
+      <div class="ex"><span class="glyphs" data-seq="blue green"></span><span class="mono">blue green</span><span>2 marbles: a blue one, then a green one.</span></div>
+      <div class="ex"><span class="glyphs" data-seq="blue+green red"></span><span class="mono">blue+green red</span><span>2 marbles: a blue-and-green one, then a red one.</span></div>
+      <div class="ex"><span class="glyphs" data-seq="blue+green red+yellow"></span><span class="mono">blue+green red+yellow</span><span>2 marbles, both two-colour. <b class="bad">Your version never makes this kind.</b></span></div>
+    </div>
+
+    <h3>Two rules that are easy to mix up</h3>
+    <div class="rules">
+      <div class="rule">
+        <p><b>Inside a marble, order doesn't matter.</b> <span class="mono">blue+green</span> and <span class="mono">green+blue</span> are the same marble, so only one is listed.</p>
+      </div>
+      <div class="rule">
+        <p><b>Between marbles, order does matter.</b> <span class="mono">blue green</span> and <span class="mono">green blue</span> are different sequences, because the marbles come out in a different order.</p>
+      </div>
+    </div>
+    <p>The README's sample shows both rules. Input 2 gives exactly 5 sequences, with <span class="mono">blue+green</span> but no <span class="mono">green+blue</span>:</p>
+    <div class="sample">
+      <span class="sitem"><span class="glyphs" data-seq="blue"></span><span class="mono">blue</span></span>
+      <span class="sitem"><span class="glyphs" data-seq="green"></span><span class="mono">green</span></span>
+      <span class="sitem"><span class="glyphs" data-seq="blue+green"></span><span class="mono">blue+green</span></span>
+      <span class="sitem"><span class="glyphs" data-seq="blue green"></span><span class="mono">blue green</span></span>
+      <span class="sitem"><span class="glyphs" data-seq="green blue"></span><span class="mono">green blue</span></span>
+    </div>
+
+    <h3>Why two-colour marbles make the problem harder</h3>
+    <p>Choosing the colours and their order isn't enough. You also have to decide how the colours are grouped into marbles. Using all four colours, there are three ways to group them:</p>
+    <div class="groupings">
+      <div class="gcard ok">
+        <span class="glyphs" data-seq="blue green red yellow"></span>
+        <b>4 single-colour marbles</b>
+        <span class="count">24 sequences</span>
+        <span class="gverdict">Your version makes these</span>
+      </div>
+      <div class="gcard ok">
+        <span class="glyphs" data-seq="blue+green red yellow"></span>
+        <b>1 two-colour marble + 2 singles</b>
+        <span class="count">36 sequences</span>
+        <span class="gverdict">Your version makes these</span>
+      </div>
+      <div class="gcard miss">
+        <span class="glyphs" data-seq="blue+green red+yellow"></span>
+        <b>2 two-colour marbles</b>
+        <span class="count">6 sequences</span>
+        <span class="gverdict">Your version misses all 6</span>
+      </div>
+    </div>
+    <p>Your version puts the colours in every order, then glues one neighbouring pair into a two-colour marble. That covers the first two groupings but never the third, because the third needs two pairs glued in the same sequence. The animations below show this step by step.</p>
+  </section>
+
+  <div class="versus">
+    <div class="vcard old">
+      <div class="eyebrow">Your version</div>
+      <ol>
+        <li>Line the colours up in every order.</li>
+        <li>Take one ordering and glue <b>one</b> neighbouring pair into a two-colour marble.</li>
+        <li>Put the pair back, glue the next pair, and repeat.</li>
+      </ol>
+      <p class="verdict">It never glues two pairs in the same sequence, so <span class="mono">blue+green red+yellow</span> is never made.</p>
+    </div>
+    <div class="vcard new">
+      <div class="eyebrow">Correct version</div>
+      <ol>
+        <li>Start with an empty sequence.</li>
+        <li>For the next position, choose any unused colour, <b>or any unused pair</b>.</li>
+        <li>Keep going until the sequence is full, then back up and try the next choice.</li>
+      </ol>
+      <p class="verdict">Every position can hold a pair, so sequences with two pairs come out naturally.</p>
+    </div>
+  </div>
+
+  <!-- 1. OLD -->
+  <section class="bench" id="old">
+    <h2>1. Your version: line up, then glue one pair</h2>
+    <p>Your code goes through all 24 orderings of the four colours. For each one it glues positions 1+2, then 2+3, then 3+4, starting again from the plain ordering every time. If the same pair in the other order was already made, it skips that one.</p>
+    <div class="stage" id="oldStage" aria-hidden="true"></div>
+    <div class="caption" aria-live="polite"><span class="stepno"></span><span class="captext"></span></div>
+    <div class="controls" data-player="old"></div>
+    <div class="jumps">
+      <span class="eyebrow">Jump to</span>
+      <button type="button" id="oldJumpMiss">The missing case</button>
+      <button type="button" id="oldJumpSkip">A skipped duplicate</button>
+      <button type="button" id="oldJumpEnd">The end</button>
+    </div>
+    <div class="panels">
+      <div class="panel">
+        <div class="head"><h3>Made from 4-colour orderings</h3><span class="count" id="oldCount"></span></div>
+        <div class="list" id="oldList"></div>
+      </div>
+      <div class="panel">
+        <div class="head"><h3>Never made</h3><span class="count">6 missing</span></div>
+        <p style="font-size:14px;color:var(--ink2)">Each of these needs two glues in one sequence.</p>
+        <div class="list" id="oldMissing"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. NEW -->
+  <section class="bench" id="new">
+    <h2>2. Correct version: fill the sequence one marble at a time</h2>
+    <p>The machine does one pass for each sequence length: 1 marble, then 2, 3 and 4. At each position it tries every unused single colour, then every unused pair. When the sequence is full it records it, then takes the last marble back out and tries the next choice. That step is called backtracking.</p>
+    <div class="stage" id="newStage" aria-hidden="true"></div>
+    <div class="mask" aria-hidden="true"><span class="eyebrow">Colours used</span><span id="bits" class="mask"></span><span class="maskbin" id="maskbin"></span></div>
+    <div class="caption" aria-live="polite"><span class="stepno"></span><span class="captext"></span></div>
+    <div class="controls" data-player="new"></div>
+    <div class="jumps">
+      <span class="eyebrow">Jump to</span>
+      <button type="button" id="newJumpPair">blue+green red+yellow</button>
+      <button type="button" data-pass="1">Pass 1</button>
+      <button type="button" data-pass="2">Pass 2</button>
+      <button type="button" data-pass="3">Pass 3</button>
+      <button type="button" data-pass="4">Pass 4</button>
+    </div>
+    <div class="panel">
+      <div class="head"><h3>Sequences recorded</h3><span class="count" id="newCount"></span></div>
+      <div class="list" id="newList"></div>
+    </div>
+  </section>
+
+  <!-- 3. GRID -->
+  <section class="bench" id="grid">
+    <h2>3. All 136 sequences side by side</h2>
+    <p>Each tile is one valid sequence. Press play to light the tiles in the order each version makes them. Tiles your version never reaches turn red. Hover a tile to see its name.</p>
+    <div class="controls">
+      <button type="button" class="primary" id="playOld">Play your version</button>
+      <button type="button" id="playNew">Play correct version</button>
+    </div>
+    <div class="scoreline">
+      <span class="score" id="score">130<small> of 136 made</small></span>
+      <span id="gridStatus" aria-live="polite" style="color:var(--ink2)"></span>
+    </div>
+    <div class="legend">
+      <span class="key"><span class="chip"><span class="mini" style="background:#2a78d6"></span></span> made</span>
+      <span class="key"><span class="chip off"><span class="mini" style="background:#2a78d6"></span></span> not made yet</span>
+      <span class="key"><span class="chip missing"><span class="mini" style="background:#2a78d6"></span></span> never made by your version</span>
+    </div>
+    <div class="groups" id="groups"></div>
+  </section>
+</main>
+
+<script>
+/*BUILDERS*/
+const C = [
+  { n: "blue",   h: "#2a78d6", l: "B", t: "#ffffff" },
+  { n: "green",  h: "#1e9a4b", l: "G", t: "#ffffff" },
+  { n: "red",    h: "#e0453f", l: "R", t: "#ffffff" },
+  { n: "yellow", h: "#f0b000", l: "Y", t: "#2a2100" },
+];
+const N = 4;
+const mLabel = m => m.map(i => C[i].n).join("+");
+const sLabel = s => s.map(mLabel).join(" ");
+const bits = x => { let c = 0; for (; x; x >>= 1) c += x & 1; return c; };
+function perms(a) {
+  if (a.length <= 1) return [a.slice()];
+  const r = [];
+  a.forEach((x, i) => perms([...a.slice(0, i), ...a.slice(i + 1)]).forEach(p => r.push([x, ...p])));
+  return r;
+}
+const names = p => p.map(i => C[i].n).join(" ");
+const glueAt = (p, k, rev) => [
+  ...p.slice(0, k).map(i => [i]),
+  rev ? [p[k + 1], p[k]] : [p[k], p[k + 1]],
+  ...p.slice(k + 2).map(i => [i]),
+];
+
+// Section 1: the old Java algorithm, restricted to orderings of all 4 colours.
+function buildOld() {
+  const orderings = perms([0, 1, 2, 3]).sort((a, b) => (names(a) < names(b) ? -1 : 1));
+  const ev = [], produced = [], glued = new Set();
+  orderings.forEach((p, oi) => {
+    produced.push(p.map(i => [i]));
+    ev.push({ type: "order", order: p, glue: null, count: produced.length,
+      cap: `Ordering ${oi + 1} of 24: <b>${names(p)}</b>. The plain ordering counts as one sequence.` });
+    for (let k = 0; k < 3; k++) {
+      const seq = glueAt(p, k, false), str = sLabel(seq), rev = sLabel(glueAt(p, k, true));
+      if (glued.has(rev)) {
+        ev.push({ type: "glue", kind: "skip", order: p, glue: k, count: produced.length,
+          cap: `Glue positions ${k + 1} and ${k + 2}: <b>${str}</b>. Skipped, because ${C[p[k + 1]].n}+${C[p[k]].n} is the same marble and <b>${rev}</b> was already made.` });
+      } else {
+        glued.add(str); produced.push(seq);
+        ev.push({ type: "glue", kind: "add", order: p, glue: k, count: produced.length,
+          cap: `Glue positions ${k + 1} and ${k + 2}: <b>${str}</b>. New sequence. The pair goes back apart before the next glue.` });
+      }
+    }
+    if (oi === 0) {
+      ev.push({ type: "second", order: p, glue: 0, second: 2, count: produced.length,
+        cap: `What about <b>blue+green red+yellow</b>? That needs two glues in the same sequence. Your code glues one pair, records the result, and starts again from the plain ordering, so this sequence is never made.` });
+    }
+  });
+  const last = orderings[orderings.length - 1];
+  ev.push({ type: "end", order: last, glue: null, count: produced.length,
+    cap: `Finished all 24 orderings: <b>${produced.length}</b> sequences that use all four colours. There should be <b>66</b>. The 6 with two two-colour marbles are missing.` });
+  return { ev, produced };
+}
+
+// Old algorithm over every subset (what the Java program printed in total).
+function buildOldAll() {
+  const plain = [];
+  for (let mask = 1; mask < 1 << N; mask++) {
+    const sub = []; for (let i = 0; i < N; i++) if (mask >> i & 1) sub.push(i);
+    perms(sub).forEach(p => plain.push(p));
+  }
+  plain.sort((a, b) => (names(a) < names(b) ? -1 : 1));
+  const res = plain.map(p => p.map(i => [i])), glued = new Set();
+  plain.forEach(p => {
+    for (let k = 0; k < p.length - 1; k++) {
+      const seq = glueAt(p, k, false), str = sLabel(seq), rev = sLabel(glueAt(p, k, true));
+      if (!glued.has(rev)) { glued.add(str); res.push(seq); }
+    }
+  });
+  return res;
+}
+
+// Section 2: the correct algorithm, recorded step by step.
+function buildNew() {
+  const ev = [], out = [];
+  let track = [], used = 0, pass = 0;
+  const snap = (type, cap) => ev.push({ type, cap, pass, used, outCount: out.length, track: track.map(m => m.slice()) });
+  const options = () => {
+    const o = [];
+    for (let i = 0; i < N; i++) if (!(used >> i & 1)) o.push([i]);
+    for (let i = 0; i < N; i++) if (!(used >> i & 1))
+      for (let j = i + 1; j < N; j++) if (!(used >> j & 1)) o.push([i, j]);
+    return o;
+  };
+  function rec(rem) {
+    if (rem === 0) {
+      out.push(track.map(m => m.slice()));
+      snap("emit", `All ${pass} position${pass > 1 ? "s are" : " is"} filled, so <b>${sLabel(track)}</b> is recorded as sequence #${out.length}.`);
+      return;
+    }
+    const left = N - bits(used);
+    if (left < rem) {
+      snap("prune", `Only ${left} unused colour${left === 1 ? "" : "s"} left, but ${rem} more marbles are needed. Dead end, so back up.`);
+      return;
+    }
+    const opts = options(), pos = track.length + 1;
+    for (const o of opts) {
+      track.push(o); o.forEach(i => (used |= 1 << i));
+      snap("try", `Position ${pos}: place <b>${mLabel(o)}</b>${o.length === 2 ? ", a two-colour marble" : ""}. Choices here: ${opts.map(mLabel).join(", ")}.`);
+      rec(rem - 1);
+      track.pop(); o.forEach(i => (used &= ~(1 << i)));
+    }
+    if (pos > 1) snap("up", `Every choice for position ${pos} has been tried. Back up to position ${pos - 1} and try its next choice.`);
+  }
+  for (let m = 1; m <= N; m++) {
+    pass = m; track = []; used = 0;
+    snap("pass", `Pass ${m}: build every sequence with exactly ${m} marble${m > 1 ? "s" : ""}.`);
+    rec(m);
+  }
+  snap("done", `Finished: <b>${out.length}</b> sequences. Every one is different, so nothing had to be filtered out.`);
+  return { ev, out };
+}
+/*END*/
+
+const $ = s => document.querySelector(s);
+
+// Static marble pictures in the explainer: data-seq="blue+green red" -> glyphs.
+const byName = Object.fromEntries(C.map((c, i) => [c.n, i]));
+document.querySelectorAll("[data-seq]").forEach(host => {
+  const seq = host.dataset.seq.split(" ").map(m => m.split("+").map(n => byName[n]));
+  host.replaceChildren(...seq.map(m => {
+    const d = document.createElement("span");
+    d.className = "gl";
+    d.style.setProperty("--fill", m.length === 1 ? C[m[0]].h : `linear-gradient(90deg, ${C[m[0]].h} 50%, ${C[m[1]].h} 50%)`);
+    return d;
+  }));
+  host.setAttribute("role", "img");
+  host.setAttribute("aria-label", host.dataset.seq);
+});
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const OLD = buildOld(), NEW = buildNew(), OLD_ALL = buildOldAll();
+const oldKeys = new Set(OLD_ALL.map(sLabel));
+const missing4 = NEW.out.filter(s => s.length > 0 && !oldKeys.has(sLabel(s)));
+
+function mini(m) {
+  const d = document.createElement("span");
+  d.className = "mini";
+  d.style.background = m.length === 1 ? C[m[0]].h : `linear-gradient(90deg, ${C[m[0]].h} 50%, ${C[m[1]].h} 50%)`;
+  return d;
+}
+function seqChip(seq, cls) {
+  const d = document.createElement("span");
+  d.className = "seq" + (cls ? " " + cls : "");
+  seq.forEach(m => d.append(mini(m)));
+  const t = document.createElement("span"); t.className = "txt"; t.textContent = sLabel(seq);
+  d.append(t);
+  return d;
+}
+function makeMarbles(stage) {
+  return C.map(c => {
+    const d = document.createElement("div");
+    d.className = "marble";
+    d.style.setProperty("--c", c.h);
+    d.style.color = c.t;
+    d.innerHTML = `<span>${c.l}</span>`;
+    stage.append(d);
+    return d;
+  });
+}
+function el(stage, cls, html) {
+  const d = document.createElement("div"); d.className = cls; if (html) d.innerHTML = html; stage.append(d); return d;
+}
+function place(m, x, y, ms, part) {
+  m.style.width = m.style.height = ms + "px";
+  m.style.fontSize = (ms < 46 ? 13 : 15) + "px";
+  m.style.transform = `translate(${x - ms / 2}px, ${y - ms / 2}px)`;
+  m.classList.toggle("hl", part === "l");
+  m.classList.toggle("hr", part === "r");
+}
+function geom(stage, slots) {
+  const W = stage.clientWidth, ms = W < 440 ? 40 : 52;
+  const sp = Math.min(100, (W - 40) / 4);
+  return { W, ms, sp, x0: n => (W - sp * (n - 1)) / 2 };
+}
+
+// ---------------- Player ----------------
+function makePlayer(sec, events, render) {
+  const host = sec.querySelector(".controls[data-player]");
+  const id = host.dataset.player;
+  host.innerHTML = `
+    <button type="button" class="restart">Restart</button>
+    <button type="button" class="back" aria-label="Previous step">Back</button>
+    <button type="button" class="primary play" aria-pressed="false">Play</button>
+    <button type="button" class="next" aria-label="Next step">Next</button>
+    <label class="sr" for="${id}Speed">Speed</label>
+    <select id="${id}Speed"><option value="slow">Slow</option><option value="normal" selected>Normal</option><option value="fast">Fast</option></select>
+    <label class="sr" for="${id}Range">Step</label>
+    <input type="range" id="${id}Range" min="0" value="0">`;
+  const q = s => host.querySelector(s);
+  const range = q("input"), play = q(".play"), speed = q("select");
+  const stepno = sec.querySelector(".stepno"), captext = sec.querySelector(".captext");
+  range.max = events.length - 1;
+  let i = 0, t = null;
+  const base = () => ({ slow: 1800, normal: 1000, fast: 280 })[speed.value];
+  function go(n) {
+    i = Math.max(0, Math.min(events.length - 1, n));
+    sec.style.setProperty("--dur", reduce ? "0ms" : Math.min(600, base() * 0.6) + "ms");
+    const e = events[i];
+    render(e);
+    range.value = i;
+    stepno.textContent = `Step ${i + 1} of ${events.length}`;
+    captext.innerHTML = e.cap;
+  }
+  function stop() { clearTimeout(t); t = null; play.textContent = "Play"; play.setAttribute("aria-pressed", "false"); }
+  function hold(e) { return ["emit", "second", "end", "done", "pass"].includes(e.type) ? 1.7 : 1; }
+  function tick() {
+    if (i >= events.length - 1) { stop(); return; }
+    go(i + 1);
+    t = setTimeout(tick, base() * hold(events[i]));
+  }
+  function start() {
+    if (i >= events.length - 1) go(0);
+    play.textContent = "Pause"; play.setAttribute("aria-pressed", "true");
+    t = setTimeout(tick, base() * hold(events[i]));
+  }
+  play.addEventListener("click", () => (t ? stop() : start()));
+  q(".back").addEventListener("click", () => { stop(); go(i - 1); });
+  q(".next").addEventListener("click", () => { stop(); go(i + 1); });
+  q(".restart").addEventListener("click", () => { stop(); go(0); });
+  range.addEventListener("input", () => { stop(); go(+range.value); });
+  speed.addEventListener("change", () => { if (t) { stop(); start(); } });
+  go(0);
+  return { jump(n) { stop(); go(n); }, refresh() { go(i); } };
+}
+
+// ---------------- Section 1: old ----------------
+const oldStage = $("#oldStage");
+const oldDimples = C.map(() => el(oldStage, "dimple"));
+const oldNums = C.map((_, s) => el(oldStage, "slotnum", String(s + 1)));
+const oldM = makeMarbles(oldStage);
+const br1 = el(oldStage, "bracket", '<span class="tag"></span>');
+const br2 = el(oldStage, "bracket never", '<span class="tag">2nd glue: never happens</span>');
+const oldList = $("#oldList"), oldCount = $("#oldCount"), oldMissing = $("#oldMissing");
+const missingAll4 = missing4.filter(s => s.reduce((a, m) => a + m.length, 0) === 4);
+missingAll4.forEach(s => oldMissing.append(seqChip(s, "missing")));
+let oldShown = -1;
+
+function renderOld(e) {
+  const g = geom(oldStage), y = 96, x0 = g.x0(4);
+  oldDimples.forEach((d, s) => {
+    const r = g.ms + 8;
+    d.style.width = d.style.height = r + "px";
+    d.style.transform = `translate(${x0 + g.sp * s - r / 2}px, ${y - r / 2}px)`;
+  });
+  oldNums.forEach((d, s) => { d.style.left = x0 + g.sp * s + "px"; d.style.top = y + g.ms / 2 + 10 + "px"; });
+  e.order.forEach((c, s) => {
+    let x = x0 + g.sp * s, part = null, ghost = false;
+    if (e.glue !== null && (s === e.glue || s === e.glue + 1)) {
+      x = x0 + g.sp * (e.glue + 0.5); part = s === e.glue ? "l" : "r";
+    }
+    if (e.second != null && (s === e.second || s === e.second + 1)) {
+      x = x0 + g.sp * (e.second + 0.5); part = s === e.second ? "l" : "r"; ghost = true;
+    }
+    place(oldM[c], x, y, g.ms, part);
+    oldM[c].classList.toggle("ghost", ghost);
+  });
+  const putBracket = (b, k) => {
+    const left = x0 + g.sp * k - g.ms / 2 - 4, w = g.sp + g.ms + 8;
+    b.style.width = w + "px";
+    b.style.transform = `translate(${left}px, ${y - g.ms / 2 - 16}px)`;
+  };
+  if (e.glue !== null) {
+    br1.style.opacity = 1; putBracket(br1, e.glue);
+    br1.classList.toggle("skip", e.kind === "skip");
+    br1.querySelector(".tag").textContent = e.type === "second" ? "1st glue" : e.kind === "skip" ? "skipped" : "glue: new";
+  } else {
+    br1.style.opacity = 0;
+  }
+  if (e.second != null) { br2.style.opacity = 1; putBracket(br2, e.second); } else { br2.style.opacity = 0; }
+
+  // produced list (re-render only when the count changes)
+  if (oldShown !== e.count) {
+    oldList.replaceChildren(...OLD.produced.slice(0, e.count).map((s, idx) =>
+      seqChip(s, idx === e.count - 1 && e.type !== "end" ? "new" : "")));
+    oldList.scrollTop = oldList.scrollHeight;
+    oldShown = e.count;
+  }
+  oldCount.textContent = `${e.count} of 66`;
+  oldMissing.querySelectorAll(".seq").forEach(d => d.classList.toggle("pulse", e.type === "second" || e.type === "end"));
+}
+const oldPlayer = makePlayer($("#old"), OLD.ev, renderOld);
+$("#oldJumpMiss").addEventListener("click", () => oldPlayer.jump(OLD.ev.findIndex(e => e.type === "second")));
+$("#oldJumpSkip").addEventListener("click", () => oldPlayer.jump(OLD.ev.findIndex(e => e.kind === "skip")));
+$("#oldJumpEnd").addEventListener("click", () => oldPlayer.jump(OLD.ev.length - 1));
+
+// ---------------- Section 2: new ----------------
+const newStage = $("#newStage");
+const lblTray = el(newStage, "rowlabel", "Unused colours");
+const lblTrack = el(newStage, "rowlabel", "Sequence being built");
+const trayDimples = C.map(() => el(newStage, "dimple"));
+const trackSlots = C.map(() => el(newStage, "trackslot"));
+const trackNums = C.map((_, s) => el(newStage, "slotnum", "position " + (s + 1)));
+const newM = makeMarbles(newStage);
+const bitsEl = $("#bits"), maskbin = $("#maskbin");
+const bitEls = C.map(c => {
+  const b = document.createElement("span"); b.className = "bit"; b.textContent = c.l;
+  b.style.setProperty("--c", c.h); b.style.setProperty("--t", c.t); bitsEl.append(b); return b;
+});
+const newList = $("#newList"), newCount = $("#newCount");
+let newShown = -1;
+
+function renderNew(e) {
+  const g = geom(newStage), H = newStage.clientHeight;
+  const trayY = 62, trackY = H - 78;
+  lblTray.style.top = "12px"; lblTrack.style.top = trackY - g.ms / 2 - 34 + "px";
+  const tx0 = g.x0(4), kx0 = g.x0(Math.max(1, e.pass));
+  trayDimples.forEach((d, c) => {
+    const r = g.ms + 8;
+    d.style.width = d.style.height = r + "px";
+    d.style.transform = `translate(${tx0 + g.sp * c - r / 2}px, ${trayY - r / 2}px)`;
+  });
+  trackSlots.forEach((d, k) => {
+    const r = g.ms + 8, on = k < e.pass;
+    d.style.width = d.style.height = r + "px";
+    d.style.opacity = on ? 1 : 0;
+    d.style.transform = `translate(${kx0 + g.sp * k - r / 2}px, ${trackY - r / 2}px)`;
+  });
+  trackNums.forEach((d, k) => {
+    d.style.opacity = k < e.pass ? 1 : 0;
+    d.style.left = kx0 + g.sp * k + "px"; d.style.top = trackY + g.ms / 2 + 10 + "px";
+    d.textContent = g.W < 440 ? String(k + 1) : "position " + (k + 1);
+  });
+  const pos = {};
+  e.track.forEach((m, k) => m.forEach((c, j) => (pos[c] = { k, part: m.length === 2 ? (j ? "r" : "l") : null })));
+  C.forEach((_, c) => {
+    const p = pos[c];
+    if (p) place(newM[c], kx0 + g.sp * p.k, trackY, g.ms, p.part);
+    else place(newM[c], tx0 + g.sp * c, trayY, g.ms, null);
+  });
+  newStage.classList.toggle("emit", e.type === "emit");
+  newStage.classList.toggle("prune", e.type === "prune");
+  bitEls.forEach((b, c) => b.classList.toggle("on", !!(e.used >> c & 1)));
+  maskbin.textContent = "used = " + e.used.toString(2).padStart(4, "0") + " (read right to left: B G R Y)";
+  if (newShown !== e.outCount) {
+    newList.replaceChildren(...NEW.out.slice(0, e.outCount).map((s, idx) =>
+      seqChip(s, idx === e.outCount - 1 && e.type === "emit" ? "new" : "")));
+    newList.scrollTop = newList.scrollHeight;
+    newShown = e.outCount;
+  } else {
+    const lastChip = newList.lastElementChild;
+    if (lastChip) lastChip.classList.toggle("new", e.type === "emit");
+  }
+  newCount.textContent = `${e.outCount} of ${NEW.out.length}`;
+}
+const newPlayer = makePlayer($("#new"), NEW.ev, renderNew);
+$("#newJumpPair").addEventListener("click", () => {
+  newPlayer.jump(NEW.ev.findIndex(e => e.type === "try" && e.pass === 2 && e.track.length === 1 && sLabel(e.track) === "blue+green"));
+});
+document.querySelectorAll("#new [data-pass]").forEach(b => b.addEventListener("click", () => {
+  newPlayer.jump(NEW.ev.findIndex(e => e.type === "pass" && e.pass === +b.dataset.pass));
+}));
+
+// ---------------- Section 3: grid ----------------
+const groupsEl = $("#groups"), chips = new Map();
+for (let m = 1; m <= N; m++) {
+  const list = NEW.out.filter(s => s.length === m);
+  const g = document.createElement("div"); g.className = "group";
+  g.innerHTML = `<h3>${m} marble${m > 1 ? "s" : ""} <span class="count">${list.length} sequences</span></h3>`;
+  const wrap = document.createElement("div"); wrap.className = "chips";
+  list.forEach(s => {
+    const c = document.createElement("span"); c.className = "chip"; c.title = sLabel(s);
+    s.forEach(mm => c.append(mini(mm)));
+    const sr = document.createElement("span"); sr.className = "sr"; sr.textContent = sLabel(s); c.append(sr);
+    wrap.append(c); chips.set(sLabel(s), c);
+  });
+  g.append(wrap); groupsEl.append(g);
+}
+const score = $("#score"), gridStatus = $("#gridStatus");
+let gridTimer = null;
+function setScore(n, total) { score.innerHTML = `${n}<small> of ${total} made</small>`; }
+function finishOld() {
+  chips.forEach((c, k) => { c.classList.toggle("off", !oldKeys.has(k)); c.classList.toggle("missing", !oldKeys.has(k)); });
+  setScore(OLD_ALL.length, NEW.out.length);
+  gridStatus.textContent = `Your version stops at ${OLD_ALL.length}. The ${missing4.length} red tiles each contain two two-colour marbles.`;
+}
+function finishNew() {
+  chips.forEach(c => c.classList.remove("off", "missing"));
+  setScore(NEW.out.length, NEW.out.length);
+  gridStatus.textContent = "The correct version makes every sequence exactly once.";
+}
+function runGrid(order, finish, label) {
+  clearInterval(gridTimer);
+  chips.forEach(c => { c.classList.add("off"); c.classList.remove("missing"); });
+  if (reduce) { finish(); return; }
+  let n = 0; setScore(0, NEW.out.length);
+  gridStatus.textContent = label;
+  const per = Math.max(1, Math.round(order.length / 120));
+  gridTimer = setInterval(() => {
+    for (let j = 0; j < per && n < order.length; j++, n++) chips.get(sLabel(order[n])).classList.remove("off");
+    setScore(n, NEW.out.length);
+    if (n >= order.length) { clearInterval(gridTimer); setTimeout(finish, 500); }
+  }, 30);
+}
+$("#playOld").addEventListener("click", () => runGrid(OLD_ALL, finishOld, "Your version: every ordering first, then the one-pair glues..."));
+$("#playNew").addEventListener("click", () => runGrid(NEW.out, finishNew, "Correct version: pass 1, then 2, 3 and 4..."));
+finishOld();
+
+let rz;
+addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { oldPlayer.refresh(); newPlayer.refresh(); }, 100); });
+</script>
+</body>
+</html>
