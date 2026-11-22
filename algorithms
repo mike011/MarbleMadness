@@ -25,7 +25,7 @@ PROBLEM
 - ULTRA SLOW.
 
 
-Recursion #3 -- Current
+Recursion #3
 
 ALGORITHM
 - Create a string of the marbles (ie. 2 marbles = "01")
@@ -48,3 +48,20 @@ Recursion #4
 - Or not generate reverse colour marble combinations?
 - Where is the current version the slowest?
 
+
+
+Recursion #4 -- Current
+
+ALGORITHM
+- Build each sequence one marble at a time, tracking used colours in a bitmask.
+- At each position, try every unused single colour, then every unused pair (i < j,
+  so "blue+green" is never also produced as "green+blue").
+- Do one pass per marble count (1..N) so output is grouped like the README sample.
+- No permutations, no duplicates, no filtering, and sequences stream straight to stdout.
+- Rewritten in Swift (Package.swift, Sources/, Tests/). The Java/Eclipse version was removed.
+
+RESULT
+- Fixes #3, which missed sequences with more than one two-colour marble
+  (e.g. "blue+green red+yellow"). Counts for 1..8:
+  1, 5, 24, 136, 935, 7671, 73360, 801704
+- Work is proportional to the output size (~800k lines for 8 colours), so 8 colours takes seconds, not hours.
