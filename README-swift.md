@@ -9,8 +9,8 @@ Diagrams of the old bug and the new algorithm are in `diagrams/`:
 - `diagrams/1-before-old-algorithm.png`: what the old Java approach did and where it went wrong
 - `diagrams/2-after-new-algorithm.png`: how the new marble-by-marble algorithm works
 - `diagrams/3-missed-sequences.png`: how many valid sequences the old code missed
-- `diagrams/marble-machine-animated.html`: animated, step-through comparison of both algorithms
-  (open it in a browser; it is a single self-contained file)
+- `diagrams/marble-machine-animated.html`: animated, step-through comparison of both algorithms.
+  View it online: https://mike011.github.io/MarbleMadness/diagrams/marble-machine-animated.html
 
 ## Usage
 
